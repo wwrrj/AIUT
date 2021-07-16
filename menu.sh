@@ -8,6 +8,19 @@ else
 fi
 }
 
+Check bin
+if [[ $Result = 0 ]];then
+    echo "./Bin not found,Download!"
+    wget https://hub.fastgit.org/wwrrj/AIUT/releases/download/v1-beta/binary.zip > /dev/null 2>&1
+    unzip -d ./bin binary.zip
+    Check binary.zip
+    if [[ $Result = 1 ]];then
+        rm -rf binary.zip
+    fi
+    clear
+    echo "Done!!!"
+fi
+
 Menu(){
     echo "----------------------------------"
     echo "The last run result: " 
