@@ -11,20 +11,21 @@ fi
 Check bin
 if [[ $Result = 0 ]];then
     echo "./Bin not found,Download!"
-    wget https://hub.fastgit.org/wwrrj/AIUT/releases/download/v1-beta/binary.zip > /dev/null 2>&1
-    unzip -d ./bin binary.zip
-    Check binary.zip
+    wget https://hub.fastgit.org/wwrrj/AIUT/releases/download/v1.1/bin.zip > /dev/null 2>&1
+    Check bin.zip
     if [[ $Result = 1 ]];then
+        unzip -d ./bin bin.zip
         rm -rf binary.zip
+        clear
+        echo "Done!!!"
+    else
+        echo "Download failed!Please download it by yourself and put it into the AIUT folder"
+        echo "Download link: https://hub.fastgit.org/wwrrj/AIUT/releases/download/v1.1/bin.zip"
+        exit
     fi
-    clear
-    echo "Done!!!"
 fi
 
 Menu(){
-    echo "----------------------------------"
-    echo "The last run result: " 
-    cat ./bin/.create
     echo "----------------------------------"
     echo "一.分解专区"
     echo "  1.system.new.dat.br --> system.new.dat"
@@ -34,6 +35,17 @@ Menu(){
     echo "  5.分解system.img"
     echo "  6.分解vendor.img"
     echo "  7.分解boot/recovery.img"
+    echo "----------------------------------"
+    echo "The last run result: " 
+    cat ./bin/.create
+    Check IMG/boot/imageinfo.txt
+    if [[ $Result = 1 ]];then
+        echo "----------------------------------"
+        echo "Kernel info: "
+        cat IMG/boot/imageinfo.txt | grep BOARD
+        echo "----------------------------------"
+        echo "[boot.img/recovery.img] --> IMG/boot"
+    fi
     echo "----------------------------------"
 }
 
@@ -102,12 +114,37 @@ UnpackIMG(){
     fi
 }
 
+Kernel(){
+    bash bin/AIK-Linux/cleanup.sh
+    if [[ $1 = unpack ]];then
+        Check IMG/boot
+        if [[ $Result = 1 ]];then
+            rm -rf IMG/boot
+            mkdir IMG/boot
+        else
+            mkdir IMG/boot
+            touch IMG/boot/imageinfo.txt
+        fi        
+        bash bin/AIK-Linux/unpackimg.sh > IMG/boot/imageinfo.txt
+        Check bin/AIK-Linux/split_img
+        if [[ $Result = 1 ]];then
+            mv bin/AIK-Linux/split_img IMG/boot
+            mv bin/AIK-Linux/ramdisk IMG/boot
+            echo "Done!!!!!!!" > ./bin/.create
+        else
+            echo "Fuck!!!Where's my $1?!!" > ./bin/.create
+        fi
+    elif [[ $1 = repack ]];then
+        bash bin/AIK-Linux/repackimg.sh  > /dev/null 2>&1
+    fi
+}
+
 Check './bin/.create' 
 if [[ $Result = "0" ]];then
     mkdir Input
+    mkdir IMG
     touch ./bin/.create
 fi
-
 
 if [[ $1 = "--m" ]]; then 
     Menu
@@ -138,7 +175,7 @@ if [[ $Choose = "1" ]];then
         UnpackBr system
         Menu
     else
-        echo "Input/system.new.dat.br not found!!!!!!" > ./bin/.create
+        echo "Input/[system.new.dat.br] not found!!!!!!" > ./bin/.create
         Menu        
     fi
 elif [[ $Choose = "2" ]];then
@@ -147,7 +184,7 @@ elif [[ $Choose = "2" ]];then
         UnpackDat system
         Menu
     else
-        echo "Input/system.new.dat not found!!!!!!" > ./bin/.create
+        echo "Input/[system.new.dat] not found!!!!!!" > ./bin/.create
         Menu
     fi
 elif [[ $Choose = "3" ]];then
@@ -156,7 +193,7 @@ elif [[ $Choose = "3" ]];then
         UnpackBr vendor
         Menu
     else
-        echo "Input/vendor.new.dat.br not found!!!!!!" > ./bin/.create
+        echo "Input/[vendor.new.dat.br] not found!!!!!!" > ./bin/.create
         Menu
     fi
 elif [[ $Choose = "4" ]];then
@@ -165,7 +202,7 @@ elif [[ $Choose = "4" ]];then
         UnpackBr vendor
         Menu
     else
-        echo "Input/vendor.new.dat not found!!!!!!" > ./bin/.create
+        echo "Input/[vendor.new.dat] not found!!!!!!" > ./bin/.create
         Menu
     fi
 elif [[ $Choose = "5" ]];then
@@ -174,7 +211,7 @@ elif [[ $Choose = "5" ]];then
         UnpackIMG system
         Menu
     else
-        echo "Input/system.img found!!!!!!" > ./bin/.create
+        echo "Input/[system.img] found!!!!!!" > ./bin/.create
         Menu
     fi
 elif [[ $Choose = "6" ]];then
@@ -183,7 +220,24 @@ elif [[ $Choose = "6" ]];then
         UnpackIMG vendor
         Menu
     else
-        echo "Input/vendor.img not found!!!!!!" > ./bin/.create
+        echo "Input/[vendor.img] not found!!!!!!" > ./bin/.create
         Menu
-    fi    
+    fi
+elif [[ $Choose = "7" ]];then
+    Check Input/boot.img
+    if [[ $Result = 1 ]];then
+        mv Input/boot.img bin/AIK-Linux
+        Kernel unpack
+        Menu
+    elif [[ $Result = 0 ]];then
+        Check Input/recovery.img
+        if [[ $Result = 1 ]];then
+            mv Input/recovery.img bin/AIK-Linux
+            Kernel unpack
+            Menu
+        else
+            echo "Input/[boot.img/recovery.img] not found!!!!!!" > ./bin/.create
+            Menu        
+        fi
+    fi  
 fi
