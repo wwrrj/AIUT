@@ -71,7 +71,7 @@ UnpackBr(){
     Check Input/$1.new.dat
     if [[ $Result == 0 ]];then
         ./bin/brotli -d Input/$1.new.dat.br
-        Check Input/system.new.dat
+        Check Input/$1.new.dat
         if [[ $Result == 1 ]];then
             echo "Done!!!!!!!" > ./bin/.create
          else
@@ -89,7 +89,7 @@ UnpackDat(){
         Check Input/$1.transfer.list
         if [[ $Result == 1 ]];then
             python ./bin/sdat2img.py ./Input/$1.transfer.list ./Input/$1.new.dat ./Input/$1.img | grep Done
-            Check Input/system.img
+            Check Input/$1.img
             if [[ $Result == 1 ]];then
                 echo "Done!!!!!!!" > ./bin/.create
             else
