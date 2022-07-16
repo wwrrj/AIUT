@@ -1,5 +1,5 @@
 # AIUT
-Android Images Unpack/Repack Tool
+Android Images Kitchen
 
 ## Usage
 
