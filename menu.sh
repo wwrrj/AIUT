@@ -8,6 +8,12 @@ else
 fi
 }
 
+IMGFiles="super system system_ext product odm vendor"
+BRFiles="system vendor system_ext product odm"
+DATFiles="system vendor system_ext product odm"
+BINFiles="payload"
+
+
 Check bin
 if [[ $Result == 0 ]];then
     echo "./Bin not found,Download!"
@@ -51,7 +57,90 @@ Menu(){
     echo "  6.分解vendor.img"
     echo "  7.分解boot/recovery.img"
     echo "  8.分解Payload.bin"
+    echo "  9.解压Zip刷机包"
+    echo "  10.清理工具"
     echo "----------------------------------"
+}
+
+AutoUnpack(){
+    DecompressIMG(){
+        for i in $IMGFiles; do
+            if [[ -e Input/$i.img ]];then
+                echo "[UNPACKIMG]: $i.img"
+                UnpackIMG $i
+            fi
+        done
+    }
+
+    DecompressDAT(){
+        for d in $DATFiles; do
+            if [[ -e Input/$d.new.dat ]];then
+                echo "[UNPACKDAT]: $d.new.dat"                
+                UnpackDat $d
+            fi
+        done
+
+        DecompressIMG
+    }
+
+    DecompressBR(){
+        for b in $BRFiles; do
+            if [[ -e Input/$b.new.dat.br ]];then
+                echo "[UNPACKBR]: $b.new.dat.br"
+                UnpackBr $b
+            fi
+        done
+
+        DecompressDAT
+    }
+
+    DecompressBIN(){
+        for bin in $BINFiles; do
+            if [[ -e Input/$bin.bin ]];then
+                echo "[UNPACKBIN]: $bin.bin"
+                Payload
+            fi
+        done
+
+        DecompressIMG
+    }
+
+    UnpackZIP(){
+        echo "[UNZIP]: Working..."        
+        7z x Input/$name -o./Input > ./bin/log
+        if [[ $(cat ./bin/log | grep "Everything is Ok") == "Everything is Ok" ]];then
+            Unzip="Done"
+            rm -rf ./bin/log
+        fi
+    }
+
+    if [[ $(ls Input | grep META-INF) == META-INF ]];then
+        mv Input rubbishbin
+        mkdir Input
+    fi
+
+    read -p "File name: " name
+
+    Check Input/$name
+    if [[ $Result == 1 ]];then
+        UnpackZIP
+    elif [[ $Result == 0 ]];then
+        Check rubbishbin/$name
+        if [[ $Result == 1 ]];then
+            mv rubbishbin/$name Input/$name
+            rm -rf rubbishbin
+            UnpackZIP
+        fi
+
+        if [[ $Result == 0 ]];then
+            echo "File not found!!!"
+        fi
+    fi
+    
+    if [[ $Unzip == "Done" ]];then
+        DecompressBIN
+        DecompressBR
+    fi
 }
 
 Usage(){
@@ -215,7 +304,7 @@ elif [[ $Choose == "3" ]];then
 elif [[ $Choose == "4" ]];then
     Check Input/vendor.new.dat
     if [[ $Result == 1 ]];then
-        UnpackBr vendor
+        UnpackDat vendor
         Info
     else
         echo "Input/[vendor.new.dat] not found!!!!!!" > ./bin/.create
@@ -265,4 +354,8 @@ elif [[ $Choose == "8" ]];then
         echo "Input/payload.bin not found!!!!!!" > ./bin/.create
         Info
     fi
+elif [[ $Choose == "9" ]];then
+    AutoUnpack
+elif [[ $Choose == "10" ]];then
+    Clean
 fi
