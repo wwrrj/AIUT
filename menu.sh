@@ -153,7 +153,7 @@ Usage(){
 
 Clean(){
     rm -rf Input/*
-    echo "Done!Back to main menu!" > ./bin/.create
+    echo "Done!Back to main menu!"
 }
 
 UnpackBr(){
@@ -164,7 +164,7 @@ UnpackBr(){
         if [[ $Result == 1 ]];then
             echo "Done!!!!!!!" > ./bin/.create
          else
-            echo "Fuck!!!Where's my $1.new.dat?!!" > ./bin/.create
+            echo "Fuck!!!Where's my $1.new.dat?!!"
         fi
     else
         rm -rf Input/$1.new.dat
@@ -180,12 +180,12 @@ UnpackDat(){
             python ./bin/sdat2img.py ./Input/$1.transfer.list ./Input/$1.new.dat ./Input/$1.img | grep Done
             Check Input/$1.img
             if [[ $Result == 1 ]];then
-                echo "Done!!!!!!!" > ./bin/.create
+                echo "Done!!!!!!!"
             else
-                echo "Fuck!!!Where's my $1.img?!!" > ./bin/.create
+                echo "Fuck!!!Where's my $1.img?!!"
             fi
         else
-            echo "Fuck!!!Where's my $1.transfer.list?!!" > ./bin/.create
+            echo "Fuck!!!Where's my $1.transfer.list?!!"
         fi
     else
         rm -rf Input/$1.img
@@ -199,9 +199,9 @@ UnpackIMG(){
         python3 ./bin/imgextractor.py ./Input/$1.img ./Input/
         Check Input/$1
         if [[ $Result == 1 ]];then
-            echo "Done!!!!!!!" > ./bin/.create
+            echo "Done!!!!!!!"
         else
-            echo "Fuck!!!Where's my $1?!!" > ./bin/.create
+            echo "Fuck!!!Where's my $1?!!"
         fi
     else
         rm -rf Input/$1
@@ -224,9 +224,9 @@ Kernel(){
         if [[ $Result == 1 ]];then
             mv bin/AIK-Linux/split_img IMG/boot
             mv bin/AIK-Linux/ramdisk IMG/boot
-            echo "Done!!!!!!!" > ./bin/.create
+            echo "Done!!!!!!!"
         else
-            echo "Fuck!!!Where's my $1?!!" > ./bin/.create
+            echo "Fuck!!!Where's my $1?!!"
         fi
     elif [[ $1 == repack ]];then
         bash bin/AIK-Linux/repackimg.sh  > /dev/null 2>&1
@@ -237,9 +237,9 @@ Payload(){
     python bin/extract_android_ota_payload.py Input/payload.bin Payload
     Check Payload/system.img
     if [[ $Result == 1 ]];then
-        echo "Input/payload.bin --> Payload" > ./bin/.create
+        echo "Input/payload.bin --> Payload"
     else
-        echo "Input/payload.bin extracted failed!!!" > ./bin/.create
+        echo "Input/payload.bin extracted failed!!!"
     fi
 }
 
@@ -251,11 +251,11 @@ if [[ $Result == "0" ]];then
     touch ./bin/.create
 fi
 
-if [[ $1 == "--m" ]]; then 
-    Menu
-    read -p "Choose: " Choose
-elif [[ $1 == "--c" ]]; then
-    read -p "Are you sure you want to clean up work path?[y(es)/n(o)]" yn
+Menu
+read -p "Choose: " Choose
+
+if [[ $1 == "--c" ]]; then
+    read -p "Are you sure to clean up?[y(es)/n(o)]" yn
     if [[ $yn == y ]];then
         Clean
         Info
@@ -269,8 +269,6 @@ elif [[ $1 == "--c" ]]; then
         echo "OK!" > ./bin/.create
         Info
     fi
-else
-    Usage
 fi
 
 
@@ -280,7 +278,7 @@ if [[ $Choose == "1" ]];then
         UnpackBr system
         Info
     else
-        echo "Input/[system.new.dat.br] not found!!!!!!" > ./bin/.create
+        echo "Input/[system.new.dat.br] not found!!!!!!"
         Info
     fi
 elif [[ $Choose == "2" ]];then
@@ -289,60 +287,48 @@ elif [[ $Choose == "2" ]];then
         UnpackDat system
         Info
     else
-        echo "Input/[system.new.dat] not found!!!!!!" > ./bin/.create
-        Info
+        echo "Input/[system.new.dat] not found!!!!!!"
     fi
 elif [[ $Choose == "3" ]];then
     Check Input/vendor.new.dat.br
     if [[ $Result == 1 ]];then
         UnpackBr vendor
-        Info
     else
-        echo "Input/[vendor.new.dat.br] not found!!!!!!" > ./bin/.create
-        Info
+        echo "Input/[vendor.new.dat.br] not found!!!!!!"
     fi
 elif [[ $Choose == "4" ]];then
     Check Input/vendor.new.dat
     if [[ $Result == 1 ]];then
         UnpackDat vendor
-        Info
     else
-        echo "Input/[vendor.new.dat] not found!!!!!!" > ./bin/.create
-        Info
+        echo "Input/[vendor.new.dat] not found!!!!!!"
     fi
 elif [[ $Choose == "5" ]];then
     Check Input/system.img
     if [[ $Result == 1 ]];then
         UnpackIMG system
-        Info
     else
-        echo "Input/[system.img] found!!!!!!" > ./bin/.create
-        Info
+        echo "Input/[system.img] found!!!!!!" >
     fi
 elif [[ $Choose == "6" ]];then
     Check Input/vendor.img
     if [[ $Result == 1 ]];then
         UnpackIMG vendor
-        Info
     else
-        echo "Input/[vendor.img] not found!!!!!!" > ./bin/.create
-        Info
+        echo "Input/[vendor.img] not found!!!!!!"
     fi
 elif [[ $Choose == "7" ]];then
     Check Input/boot.img
     if [[ $Result == 1 ]];then
         mv Input/boot.img bin/AIK-Linux
         Kernel unpack
-        Info
     elif [[ $Result == 0 ]];then
         Check Input/recovery.img
         if [[ $Result == 1 ]];then
             mv Input/recovery.img bin/AIK-Linux
             Kernel unpack
-            Info
         else
-            echo "Input/[boot.img/recovery.img] not found!!!!!!" > ./bin/.create
-            Info     
+            echo "Input/[boot.img/recovery.img] not found!!!!!!"     
         fi
     fi
 elif [[ $Choose == "8" ]];then
@@ -351,8 +337,7 @@ elif [[ $Choose == "8" ]];then
         Payload
         Info
     elif [[ $Result == 0 ]];then
-        echo "Input/payload.bin not found!!!!!!" > ./bin/.create
-        Info
+        echo "Input/payload.bin not found!!!!!!"
     fi
 elif [[ $Choose == "9" ]];then
     AutoUnpack
