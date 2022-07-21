@@ -8,11 +8,16 @@ else
 fi
 }
 
-IMGFiles="super system system_ext product odm vendor"
+IMGFiles="system system_ext product odm vendor"
 BRFiles="system vendor system_ext product odm"
 DATFiles="system vendor system_ext product odm"
 BINFiles="payload"
 
+
+Continue(){
+    echo "Press any key to continue"
+    read -n1
+}
 
 Check bin
 if [[ $Result == 0 ]];then
@@ -49,24 +54,106 @@ Info(){
 Menu(){
     echo "----------------------------------"
     echo "一.分解专区"
-    echo "  1.system.new.dat.br --> system.new.dat"
-    echo "  2.system.new.dat --> system.img"
-    echo "  3.vendor.new.dat.br --> vendor.new.dat"
-    echo "  4.vendor.new.dat --> vendor.img"
-    echo "  5.分解system.img"
-    echo "  6.分解vendor.img"
-    echo "  7.分解boot/recovery.img"
-    echo "  8.分解Payload.bin"
-    echo "  9.解压Zip刷机包"
-    echo "  10.清理工具"
+    echo "  1.分解new.dat.br"
+    echo "  2.分解new.dat"
+    echo "  3.分解img"
+    echo "  4.分解super.img"
+    echo "  5.分解boot/recovery.img"
+    echo "  6.分解Payload.bin"
     echo "----------------------------------"
+    echo "二.合并专区"
+    echo "  11.打包new.dat.br"
+    echo "  22.打包new.dat"
+    echo "  33.打包img"
+    echo "  44.打包super.img"
+    echo "  55.打包boot/recovery.img"
+    echo "  66.打包Payload.bin"
+    echo "----------------------------------"
+    echo "三.杂项"
+    echo "  100.清理工具"
+    echo "  200.解压刷机包"  
+    echo "----------------------------------"
+    read -p "Choose: " Choose
+
+    if [[ $Choose == "1" ]];then
+        if [[ $(ls Input | grep new.dat.br) != "" ]];then
+            for b in $BRFiles; do
+                if [[ -e Input/$b.new.dat.br ]];then
+                    echo "[UnpackBr]: $b.new.dat.br"
+                    UnpackBr $b
+                    rm -rf Input/$b.new.dat.br
+                fi
+            done
+        else
+            echo "[UnpackBr]: *.new.dat.br not found!"
+        fi
+        Continue
+        clear
+        Menu
+    elif [[ $Choose == "2" ]];then
+        if [[ $(ls Input | grep -v br | grep new.dat) != "" ]];then
+            for d in $DATFiles; do
+                if [[ -e Input/$d.new.dat ]];then
+                    echo "[UnpackDat]: $d.new.dat"
+                    UnpackDat $d
+                    rm -rf Input/$d.new.dat
+                fi
+            done
+        else
+            echo "[UnpackDat]: *.new.dat not found!"
+        fi
+        Continue
+        clear
+        Menu
+    elif [[ $Choose == "3" ]];then
+        if [[ $(ls Input | grep .img) != "" ]];then
+            for i in $IMGFiles; do
+                if [[ -e Input/$i.img ]];then
+                    echo "[UnpackImg]: $i.img"
+                    UnpackIMG $i
+                    rm -rf Input/$i.img
+                fi
+            done
+        else
+            echo "[UnpackImg]: *.img not found!"
+        fi
+        Continue
+        clear
+        Menu
+    elif [[ $Choose == "7" ]];then
+        Check Input/boot.img
+        if [[ $Result == 1 ]];then
+            mv Input/boot.img bin/AIK-Linux
+            Kernel unpack
+        elif [[ $Result == 0 ]];then
+            Check Input/recovery.img
+            if [[ $Result == 1 ]];then
+                mv Input/recovery.img bin/AIK-Linux
+                Kernel unpack
+            else
+                echo "Input/[boot.img/recovery.img] not found!!!!!!"     
+            fi
+        fi
+    elif [[ $Choose == "8" ]];then
+        Check Input/payload.bin
+        if [[ $Result == 1 ]];then
+            Payload
+            Info
+        elif [[ $Result == 0 ]];then
+            echo "Input/payload.bin not found!!!!!!"
+        fi
+    elif [[ $Choose == "100" ]];then
+        Clean
+    elif [[ $Choose == "200" ]];then
+        AutoUnpack
+    fi
 }
 
 AutoUnpack(){
     DecompressIMG(){
         for i in $IMGFiles; do
             if [[ -e Input/$i.img ]];then
-                echo "[UNPACKIMG]: $i.img"
+                echo "[UnpackImg]: $i.img"
                 UnpackIMG $i
             fi
         done
@@ -75,7 +162,7 @@ AutoUnpack(){
     DecompressDAT(){
         for d in $DATFiles; do
             if [[ -e Input/$d.new.dat ]];then
-                echo "[UNPACKDAT]: $d.new.dat"                
+                echo "[UnpackDat]: $d.new.dat"                
                 UnpackDat $d
             fi
         done
@@ -86,7 +173,7 @@ AutoUnpack(){
     DecompressBR(){
         for b in $BRFiles; do
             if [[ -e Input/$b.new.dat.br ]];then
-                echo "[UNPACKBR]: $b.new.dat.br"
+                echo "[UnpackBr]: $b.new.dat.br"
                 UnpackBr $b
             fi
         done
@@ -94,19 +181,19 @@ AutoUnpack(){
         DecompressDAT
     }
 
-    DecompressBIN(){
-        for bin in $BINFiles; do
-            if [[ -e Input/$bin.bin ]];then
-                echo "[UNPACKBIN]: $bin.bin"
-                Payload
-            fi
-        done
-
-        DecompressIMG
-    }
+    # DecompressBIN(){
+    #    for a in $BINFiles; do
+    #        if [[ -e Input/$a.bin ]];then
+    #            echo "[UnpackBin]: $a.bin"
+    #            Payload
+    #        fi
+    #    done
+    #
+    #    DecompressIMG
+    #}
 
     UnpackZIP(){
-        echo "[UNZIP]: Working..."        
+        echo "[Unzip]: Working..."        
         7z x Input/$name -o./Input > ./bin/log
         if [[ $(cat ./bin/log | grep "Everything is Ok") == "Everything is Ok" ]];then
             Unzip="Done"
@@ -137,8 +224,8 @@ AutoUnpack(){
         fi
     fi
     
-    if [[ $Unzip == "Done" ]];then
-        DecompressBIN
+    if [[ $Unzip == "Done!" ]];then
+        PayloadS
         DecompressBR
     fi
 }
@@ -153,7 +240,7 @@ Usage(){
 
 Clean(){
     rm -rf Input/*
-    echo "Done!Back to main menu!"
+    echo "Done!"
 }
 
 UnpackBr(){
@@ -162,9 +249,9 @@ UnpackBr(){
         ./bin/brotli -d Input/$1.new.dat.br
         Check Input/$1.new.dat
         if [[ $Result == 1 ]];then
-            echo "Done!!!!!!!" > ./bin/.create
-         else
-            echo "Fuck!!!Where's my $1.new.dat?!!"
+            echo "[UnpackBr]: Done!"
+        else
+            echo "[UnpackBr]: Failed!"
         fi
     else
         rm -rf Input/$1.new.dat
@@ -177,15 +264,13 @@ UnpackDat(){
     if [[ $Result == 0 ]];then
         Check Input/$1.transfer.list
         if [[ $Result == 1 ]];then
-            python ./bin/sdat2img.py ./Input/$1.transfer.list ./Input/$1.new.dat ./Input/$1.img | grep Done
+            python ./bin/sdat2img.py ./Input/$1.transfer.list ./Input/$1.new.dat ./Input/$1.img > /dev/null 2>&1
             Check Input/$1.img
             if [[ $Result == 1 ]];then
-                echo "Done!!!!!!!"
+                echo "[UnpackDat]: Done!"
             else
-                echo "Fuck!!!Where's my $1.img?!!"
+                echo "[UnpackBat]: Failed!"
             fi
-        else
-            echo "Fuck!!!Where's my $1.transfer.list?!!"
         fi
     else
         rm -rf Input/$1.img
@@ -196,15 +281,16 @@ UnpackDat(){
 UnpackIMG(){
     Check Input/$1
     if [[ $Result == 0 ]];then
-        python3 ./bin/imgextractor.py ./Input/$1.img ./Input/
+        python3 ./bin/imgextractor.py ./Input/$1.img ./Input/ > /dev/null 2>&1
         Check Input/$1
         if [[ $Result == 1 ]];then
-            echo "Done!!!!!!!"
+            echo "[UnpackImg]: Done!"
         else
-            echo "Fuck!!!Where's my $1?!!"
+            echo "[UnpackImg]: Failed!"
         fi
     else
         rm -rf Input/$1
+        UnpackIMG $1
     fi
 }
 
@@ -234,8 +320,8 @@ Kernel(){
 }
 
 Payload(){
-    python bin/extract_android_ota_payload.py Input/payload.bin Payload
-    Check Payload/system.img
+    python bin/payload/payload.py Input/$1.bin Input
+    Check Input/system.img
     if [[ $Result == 1 ]];then
         echo "Input/payload.bin --> Payload"
     else
@@ -252,95 +338,3 @@ if [[ $Result == "0" ]];then
 fi
 
 Menu
-read -p "Choose: " Choose
-
-if [[ $1 == "--c" ]]; then
-    read -p "Are you sure to clean up?[y(es)/n(o)]" yn
-    if [[ $yn == y ]];then
-        Clean
-        Info
-    elif [[ $yn == yes ]];then
-        Clean
-        Info
-    elif [[ $yn == n ]];then
-        echo "OK!" > ./bin/.create
-        Info
-    elif [[ $yn == no ]];then
-        echo "OK!" > ./bin/.create
-        Info
-    fi
-fi
-
-
-if [[ $Choose == "1" ]];then
-    Check Input/system.new.dat.br
-    if [[ $Result == 1 ]];then
-        UnpackBr system
-        Info
-    else
-        echo "Input/[system.new.dat.br] not found!!!!!!"
-        Info
-    fi
-elif [[ $Choose == "2" ]];then
-    Check Input/system.new.dat
-    if [[ $Result == 1 ]];then
-        UnpackDat system
-        Info
-    else
-        echo "Input/[system.new.dat] not found!!!!!!"
-    fi
-elif [[ $Choose == "3" ]];then
-    Check Input/vendor.new.dat.br
-    if [[ $Result == 1 ]];then
-        UnpackBr vendor
-    else
-        echo "Input/[vendor.new.dat.br] not found!!!!!!"
-    fi
-elif [[ $Choose == "4" ]];then
-    Check Input/vendor.new.dat
-    if [[ $Result == 1 ]];then
-        UnpackDat vendor
-    else
-        echo "Input/[vendor.new.dat] not found!!!!!!"
-    fi
-elif [[ $Choose == "5" ]];then
-    Check Input/system.img
-    if [[ $Result == 1 ]];then
-        UnpackIMG system
-    else
-        echo "Input/[system.img] found!!!!!!" >
-    fi
-elif [[ $Choose == "6" ]];then
-    Check Input/vendor.img
-    if [[ $Result == 1 ]];then
-        UnpackIMG vendor
-    else
-        echo "Input/[vendor.img] not found!!!!!!"
-    fi
-elif [[ $Choose == "7" ]];then
-    Check Input/boot.img
-    if [[ $Result == 1 ]];then
-        mv Input/boot.img bin/AIK-Linux
-        Kernel unpack
-    elif [[ $Result == 0 ]];then
-        Check Input/recovery.img
-        if [[ $Result == 1 ]];then
-            mv Input/recovery.img bin/AIK-Linux
-            Kernel unpack
-        else
-            echo "Input/[boot.img/recovery.img] not found!!!!!!"     
-        fi
-    fi
-elif [[ $Choose == "8" ]];then
-    Check Input/payload.bin
-    if [[ $Result == 1 ]];then
-        Payload
-        Info
-    elif [[ $Result == 0 ]];then
-        echo "Input/payload.bin not found!!!!!!"
-    fi
-elif [[ $Choose == "9" ]];then
-    AutoUnpack
-elif [[ $Choose == "10" ]];then
-    Clean
-fi
