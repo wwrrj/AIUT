@@ -120,6 +120,17 @@ Menu(){
         Continue
         clear
         Menu
+    elif [[ $Choose == "6" ]];then
+        Check Input/payload.bin
+        if [[ $Result == "1" ]];then
+            echo "[UnpackBIN]: payload.bin"
+            Payload
+        else
+            echo "[UnpackBIN]: Input/payload.bin not found!"
+        fi
+        Continue
+        clear
+        Menu
     elif [[ $Choose == "7" ]];then
         Check Input/boot.img
         if [[ $Result == 1 ]];then
@@ -144,8 +155,15 @@ Menu(){
         fi
     elif [[ $Choose == "100" ]];then
         Clean
+        Continue
+        Menu
     elif [[ $Choose == "200" ]];then
         AutoUnpack
+    else
+        echo "Error!"
+        Continue
+        Clean
+        Menu
     fi
 }
 
@@ -181,16 +199,16 @@ AutoUnpack(){
         DecompressDAT
     }
 
-    # DecompressBIN(){
-    #    for a in $BINFiles; do
-    #        if [[ -e Input/$a.bin ]];then
-    #            echo "[UnpackBin]: $a.bin"
-    #            Payload
-    #        fi
-    #    done
-    #
-    #    DecompressIMG
-    #}
+    DecompressBIN(){
+        for a in $BINFiles; do
+            if [[ -e Input/$a.bin ]];then
+                echo "[UnpackBin]: $a.bin"
+                Payload
+            fi
+        done
+    
+        DecompressIMG
+    }
 
     UnpackZIP(){
         echo "[Unzip]: Working..."        
@@ -220,12 +238,12 @@ AutoUnpack(){
         fi
 
         if [[ $Result == 0 ]];then
-            echo "File not found!!!"
+            echo "[Checker]: Input/$name not found!"
         fi
     fi
     
-    if [[ $Unzip == "Done!" ]];then
-        PayloadS
+    if [[ $Unzip == "Done" ]];then
+        Payload
         DecompressBR
     fi
 }
@@ -285,6 +303,7 @@ UnpackIMG(){
         Check Input/$1
         if [[ $Result == 1 ]];then
             echo "[UnpackImg]: Done!"
+            rm -rf Input/$1.img
         else
             echo "[UnpackImg]: Failed!"
         fi
@@ -320,12 +339,12 @@ Kernel(){
 }
 
 Payload(){
-    python bin/payload/payload.py Input/$1.bin Input
+    python3 bin/extract_android_ota_payload.py Input/payload.bin Input
     Check Input/system.img
     if [[ $Result == 1 ]];then
-        echo "Input/payload.bin --> Payload"
+        echo "[UnpackBIN]: Done!"
     else
-        echo "Input/payload.bin extracted failed!!!"
+        echo "[UnpackBIN]: Failed!"
     fi
 }
 
