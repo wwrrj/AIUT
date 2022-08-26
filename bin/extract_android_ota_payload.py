@@ -114,7 +114,7 @@ def main(filename, output_dir):
 
   for p in payload.manifest.partitions:
     name = p.partition_name + '.img'
-    print("Extracting '%s'" % name)
+    print("[UnpackBIN]: Extracting '%s'" % name)
     fname = os.path.join(output_dir, name)
     out_f = open(fname, 'wb')
     try:
